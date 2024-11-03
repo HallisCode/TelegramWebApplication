@@ -19,6 +19,8 @@ namespace TelegramWebApp
         public void SetServer(IServer server)
         {
             Server = server;
+
+            Logging.AddConsole();
         }
 
         public TelegramWebApplication Build()
