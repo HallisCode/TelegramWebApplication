@@ -16,18 +16,26 @@ namespace TelegramWebApp
         public IServer? Server { get; protected set; }
 
 
+        public TelegramWebApplicationBuilder()
+        {
+            Logging.AddConsole();
+        }
+
         public void SetServer(IServer server)
         {
             Server = server;
-
-            Logging.AddConsole();
         }
 
         public TelegramWebApplication Build()
         {
             // Добавляем логгирование
-            Services.Add(Logging.Services);
+            ILoggerFactory loggerFactory = LoggerFactory.Create(
+                configure => configure.Services.Add(Logging.Services)
+            );
+            Services.AddSingleton<ILoggerFactory>(loggerFactory);
+            Services.AddTransient(typeof(ILogger<>), typeof(Logger<>));
 
+            // Проверяем наличие сервера
             if (Server is null)
             {
                 throw new Exception($"Не настроен {nameof(Server)}, необходимо вызвать {nameof(SetServer)}.");
@@ -37,6 +45,7 @@ namespace TelegramWebApp
             IServiceProvider serviceProvider = Services.BuildServiceProvider();
             Services.AddSingleton<IServiceProvider>(serviceProvider);
 
+            // Создаём приложение
             TelegramWebApplication application = new TelegramWebApplication(Server, Services.BuildServiceProvider());
 
             Services.Clear();

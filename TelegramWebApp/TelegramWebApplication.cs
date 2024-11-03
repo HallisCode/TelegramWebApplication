@@ -3,6 +3,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using SimpleNetFramework.Core.Server;
 using SimpleNetFramework.Infrastructure;
 using SimpleNetFramework.Infrastructure.Server;
@@ -30,7 +31,7 @@ namespace TelegramWebApp
                 {
                     return;
                 }
-
+                
                 await _middlewares[0].Invoke(update);
             }
         }
