@@ -11,9 +11,13 @@ namespace TelegramWebApp
     public class RoutingMiddleware : IMiddleware<Update>
     {
         private readonly IRouteHandler _routeHandler;
+        private MiddlewareDelegate<Update> _next;
 
 
-        public MiddlewareDelegate<Update> Next { get; }
+        public MiddlewareDelegate<Update> Next
+        {
+            set => _next = value;
+        }
 
 
         public RoutingMiddleware(IRouteHandler routeHandler)
@@ -23,7 +27,7 @@ namespace TelegramWebApp
 
         public async Task Invoke(Update update)
         {
-            _routeHandler.Handle(update);
+            await _routeHandler.Handle(update);
         }
     }
 }
