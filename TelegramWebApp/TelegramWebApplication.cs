@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -37,7 +38,7 @@ namespace TelegramWebApp
         protected virtual IHttpResponse GetResponse200()
         {
             HttpResponse response = new HttpResponse(
-                statusCode: 200,
+                statusCode: HttpStatusCode.NoContent,
                 message: "OK",
                 body: null,
                 protocol: "HTTP/1.1"
