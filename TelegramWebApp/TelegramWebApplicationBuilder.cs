@@ -20,7 +20,7 @@ namespace TelegramWebApp
 
         public TelegramWebApplicationBuilder()
         {
-            
+            _SetUpDefaultSettings();
         }
 
         public void SetServer(IServer server)
@@ -36,18 +36,26 @@ namespace TelegramWebApp
                 throw new Exception($"Не настроен {nameof(Server)}, необходимо вызвать {nameof(SetServer)}.");
             }
 
-            ILoggerFactory loggerFactory = _LoggingConfigure();
-            ILogger loggerDefault = loggerFactory.CreateLogger<TelegramWebApplication>();
+            // Внедряем логгирование
+            ILoggerFactory loggerFactory = LoggerFactory.Create(
+                configure => configure.Services.Add(Logging.Services)
+            );
+            Services.AddSingleton<ILoggerFactory>(loggerFactory);
+            Services.AddTransient(typeof(ILogger<>), typeof(Logger<>));
 
-            IConfigurationRoot configurationRoot = _ConfigurationConfigure();
+            // Внедряем конфигуратор
+            IConfigurationRoot configurationRoot = Configuration.Build();
+            Services.AddSingleton<IConfiguration>(configurationRoot);
 
-            IServiceProvider serviceProvider = _ConfigureProvider();
+            // Внедряем провайдера в самого себя
+            IServiceProvider serviceProvider = Services.BuildServiceProvider();
+            Services.AddSingleton<IServiceProvider>(serviceProvider);
 
             // Создаём приложение
             TelegramWebApplication application = new TelegramWebApplication(
                 server: Server,
-                provider: serviceProvider,
-                logger: loggerDefault,
+                provider: Services.BuildServiceProvider(),
+                logger: loggerFactory.CreateLogger<TelegramWebApplication>(),
                 configuration: configurationRoot);
 
             // Сбрасываем все накопленные настройки
@@ -59,44 +67,20 @@ namespace TelegramWebApp
             return application;
         }
 
-        protected virtual ILoggerFactory _LoggingConfigure()
+        protected virtual void _SetUpDefaultSettings()
         {
-            // Добавляем провайдеры по умолчанию
-            Logging.AddConsole();
-
-            // Внедряем логгирование
-            ILoggerFactory loggerFactory = LoggerFactory.Create(
-                configure => configure.Services.Add(Logging.Services)
-            );
-            Services.AddSingleton<ILoggerFactory>(loggerFactory);
-            Services.AddTransient(typeof(ILogger<>), typeof(Logger<>));
-
-            return loggerFactory;
+            _LoggingDefaultConfigure();
+            _ConfigurationDefaultConfigure();
         }
 
-        protected virtual IConfigurationRoot _ConfigurationConfigure()
+        protected virtual void _ConfigurationDefaultConfigure()
         {
-            // Добавляем провайдеры по умолчанию
             Configuration.AddEnvironmentVariables();
-
-            // Внедряем конфигурацию
-            IConfigurationRoot configurationRoot = Configuration.Build();
-
-            Services.AddSingleton<IConfiguration>(configurationRoot);
-
-            return configurationRoot;
         }
 
-        /// <summary>
-        /// Должен вызываться самым последним в <see cref="Build"/>.
-        /// </summary>
-        protected virtual IServiceProvider _ConfigureProvider()
+        protected virtual void _LoggingDefaultConfigure()
         {
-            // Добавляем ServiceProvider
-            IServiceProvider serviceProvider = Services.BuildServiceProvider();
-            Services.AddSingleton<IServiceProvider>(serviceProvider);
-
-            return Services.BuildServiceProvider();
+            Logging.AddConsole();
         }
     }
 }
