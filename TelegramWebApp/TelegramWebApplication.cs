@@ -3,7 +3,9 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using SimpleNetFramework.Core.Server;
 using SimpleNetFramework.Infrastructure;
 using SimpleNetFramework.Infrastructure.Server;
@@ -14,7 +16,15 @@ namespace TelegramWebApp
 {
     public class TelegramWebApplication : WebApplicationBase<Update>, ITelegramWebApplication
     {
-        public TelegramWebApplication(IServer server, IServiceProvider provider) : base(server, provider)
+        public TelegramWebApplication(
+            IServer server,
+            IServiceProvider provider,
+            ILogger logger,
+            IConfigurationRoot configuration) : base(
+            server: server,
+            provider: provider,
+            configuration: configuration,
+            logger: logger)
         {
         }
 
@@ -31,7 +41,7 @@ namespace TelegramWebApp
                 {
                     return;
                 }
-                
+
                 await _middlewares[0].Invoke(update);
             }
         }
